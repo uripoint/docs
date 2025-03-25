@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .player-container {
+            margin: 20px 0;
+        }
+        video {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            display: block;
+        }
+        .stream-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stream Player</h1>
+        
+        <div class="stream-info">
+            <h2>HLS Stream</h2>
+            <div id="hlsStatus" class="status">Initializing...</div>
+            <div class="player-container">
+                <video id="hlsPlayer" controls></video>
+            </div>
+        </div>
+
+        <div class="stream-info">
+            <h2>Stream URLs</h2>
+            <p><strong>HLS:</strong> http://localhost:8081/output/stream_0/stream.m3u8</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize HLS player
+        const hlsPlayer = document.getElementById('hlsPlayer');
+        const hlsStatus = document.getElementById('hlsStatus');
+        
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource('http://localhost:8081/output/stream_0/stream.m3u8');
+            hls.attachMedia(hlsPlayer);
+            
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                hlsStatus.textContent = 'HLS stream ready';
+                hlsStatus.className = 'status success';
+                hlsPlayer.play();
+            });
+
+            hls.on(Hls.Events.ERROR, function(event, data) {
+                if (data.fatal) {
+                    hlsStatus.textContent = 'Error loading HLS stream';
+                    hlsStatus.className = 'status error';
+                    console.error('HLS error:', data);
+                }
+            });
+        } else if (hlsPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+            hlsPlayer.src = 'http://localhost:8081/output/stream_0/stream.m3u8';
+            hlsPlayer.addEventListener('loadedmetadata', function() {
+                hlsStatus.textContent = 'HLS stream ready (native playback)';
+                hlsStatus.className = 'status success';
+                hlsPlayer.play();
+            });
+            hlsPlayer.addEventListener('error', function(e) {
+                hlsStatus.textContent = 'Error loading HLS stream';
+                hlsStatus.className = 'status error';
+                console.error('Player error:', e);
+            });
+        } else {
+            hlsStatus.textContent = 'HLS playback not supported';
+            hlsStatus.className = 'status error';
+        }
+    </script>
+</body>
+</html>

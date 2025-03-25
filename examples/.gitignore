@@ -1,3 +1,6 @@
+venv
+output
+.env
 .idea
 .mp3
 .mp4
